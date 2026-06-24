@@ -1,4 +1,3 @@
-```md
 # 📂 Automated File Organizer
 
 An automated Python application that monitors a folder (such as **Downloads**) in real time and automatically organizes files into categorized folders based on their file extensions.
@@ -27,7 +26,7 @@ An automated Python application that monitors a folder (such as **Downloads**) i
 ---
 
 🚀 Installation
-```
+
 
 ### 1. Clone the Repository
 
@@ -87,9 +86,7 @@ The application will start monitoring the configured folder and automatically or
 
 ---
 
-## 📚 What I Learned
-
-During this project I learned:
+## 📚 Learning Outcomes 
 
 * Python File Handling
 * Working with Directories
@@ -103,7 +100,7 @@ During this project I learned:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome!
 
