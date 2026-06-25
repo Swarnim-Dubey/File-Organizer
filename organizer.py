@@ -5,6 +5,10 @@ import shutil
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import time
+from logger import setup_logger
+
+
+logger = setup_logger()
 
 def load_config():
     config_path = Path(__file__).parent / 'config.json'
@@ -35,14 +39,14 @@ def handle_duplicate(destination_path):
             return new_path
         counter += 1
 
-def move_file(source_path, watch_folder, rules, unknown_folder, dry_run=False):
+def move_file(source_path, watch_folder, rules, unknown_folder, dry_run=False, logger=None):
     destination_folder = get_destination(source_path.name, rules, unknown_folder)   # gets the destination folder name for this file
     destination_dir = Path(watch_folder) / destination_folder   # build the full destination directory path
     destination_path = destination_dir / source_path.name   # build full destination file path
     destination_path = handle_duplicate(destination_path)   # handling duplication
 
     if dry_run:
-        print(f"Dry run will move: {source_path} to {destination_path}")
+        logger.info(f"Dry run will move: {source_path.name} to {destination_path}")
         return
     
     # this creates the destination folder if doesnt exist
@@ -53,11 +57,12 @@ def move_file(source_path, watch_folder, rules, unknown_folder, dry_run=False):
 
 
 class FileHandler(FileSystemEventHandler):
-    def __init__(self, watch_folder, rules, unknown_folder, dry_run=False):
+    def __init__(self, watch_folder, rules, unknown_folder, dry_run=False, logger=None):
         self.watch_folder = watch_folder
         self.rules = rules
         self.unknown_folder = unknown_folder
         self.dry_run = dry_run
+        self.logger = logger
     
     def on_created(self, event):
         if event.is_directory:
@@ -65,7 +70,7 @@ class FileHandler(FileSystemEventHandler):
         source_path = Path(event.src_path)
         self._wait_for_file(source_path)
 
-        move_file(source_path, self.watch_folder, self.rules, self.unknown_folder, self.dry_run)
+        move_file(source_path, self.watch_folder, self.rules, self.unknown_folder, self.dry_run, self.logger)
     
     def _wait_for_file(self, path):
         previous_size = -1
@@ -85,12 +90,12 @@ def start_watching(dry_run=False):
     rules = config["rules"]
     unknown_folder = config["unknown_folder"]
 
-    handler = FileHandler(watch_folder, rules, unknown_folder, dry_run)
+    handler = FileHandler(watch_folder, rules, unknown_folder, dry_run, logger)
     observer = Observer()
     observer.schedule(handler, watch_folder, recursive=False)
 
-    print(f"Watching the folder {watch_folder}")
-    print("Press Ctrl + c to stop\n")
+    logger.info(f"Watching the folder {watch_folder}")
+    logger.info("Press Ctrl + c to stop\n")
 
     observer.start()
 
