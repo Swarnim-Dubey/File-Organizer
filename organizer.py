@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import json
+import shutil
 
 def load_config():
     config_path = Path(__file__).parent / 'config.json'
@@ -31,8 +32,26 @@ def handle_duplicate(destination_path):
             return new_path
         counter += 1
 
-def move_file():
+def move_file(source_path, watch_folder, rules, unknown_folder, dry_run=False):
+    destination_folder = get_destination(source_path.name, rules, unknown_folder)   # gets the destination folder name for this file
+    destination_dir = Path(watch_folder) / destination_folder   # build the full destination directory path
+    destination_path = destination_dir / source_path.name   # build full destination file path
+    destination_path = handle_duplicate(destination_path)   # handling duplication
+
+    if dry_run:
+        print(f"Dry run will move: {source_path} to {destination_path}")
+        return
+    
+    # this creates the destination folder if doesnt exist
+    destination_dir.mkdir(parents = True, exist_ok = True)
+
+    shutil.move(str(source_path), str(destination_path))
+    print(f"Moved {source_path.name} to {destination_path}")
+
+
+def start_watching():
     ...
+
 if __name__ == "__main__":
     # config = load_config()
     # rules = config["rules"]
