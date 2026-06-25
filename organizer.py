@@ -6,9 +6,11 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import time
 from logger import setup_logger
-
+from notifier import send_notification
+from utils import format_file_size
 
 logger = setup_logger()
+# notifier = send_notification()
 
 def load_config():
     config_path = Path(__file__).parent / 'config.json'
@@ -46,7 +48,9 @@ def move_file(source_path, watch_folder, rules, unknown_folder, dry_run=False, l
     destination_path = handle_duplicate(destination_path)   # handling duplication
 
     if dry_run:
-        logger.info(f"Dry run will move: {source_path.name} to {destination_path}")
+        file_size = format_file_size(destination_path.stat().st_size())
+        logger.info(f"Moved {source_path} to {destination_path} ({file_size})")
+        send_notification(source_path.name, str(destination_path.parent))
         return
     
     # this creates the destination folder if doesnt exist
@@ -68,9 +72,28 @@ class FileHandler(FileSystemEventHandler):
         if event.is_directory:
             return
         source_path = Path(event.src_path)
+
+        ignored_extensions = {".tmp", ".crdownload", ".part", ".download"}
+        ignored_prefixes = ("~", ".")
+
+        if source_path.suffix.lower() in ignored_extensions:
+            return
+        if source_path.name.startswith(ignored_prefixes):
+            return
+        
         self._wait_for_file(source_path)
 
-        move_file(source_path, self.watch_folder, self.rules, self.unknown_folder, self.dry_run, self.logger)
+        if not source_path.exists():
+            return
+
+        move_file(
+            source_path,
+            self.watch_folder,
+            self.rules,
+            self.unknown_folder,
+            self.dry_run,
+            self.logger
+        )
     
     def _wait_for_file(self, path):
         previous_size = -1
