@@ -2,6 +2,9 @@ from pathlib import Path
 import os
 import json
 import shutil
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import time
 
 def load_config():
     config_path = Path(__file__).parent / 'config.json'
@@ -49,21 +52,58 @@ def move_file(source_path, watch_folder, rules, unknown_folder, dry_run=False):
     print(f"Moved {source_path.name} to {destination_path}")
 
 
-def start_watching():
-    ...
+class FileHandler(FileSystemEventHandler):
+    def __init__(self, watch_folder, rules, unknown_folder, dry_run=False):
+        self.watch_folder = watch_folder
+        self.rules = rules
+        self.unknown_folder = unknown_folder
+        self.dry_run = dry_run
+    
+    def on_created(self, event):
+        if event.is_directory:
+            return
+        source_path = Path(event.src_path)
+        self._wait_for_file(source_path)
+
+        move_file(source_path, self.watch_folder, self.rules, self.unknown_folder, self.dry_run)
+    
+    def _wait_for_file(self, path):
+        previous_size = -1
+        while True:
+            try:
+                current_size = path.stat().st_size
+                if current_size == previous_size:
+                    break
+                previous_size = current_size
+                time.sleep(1)
+            except FileNotFoundError:
+                break
+
+def start_watching(dry_run=False):
+    config = load_config()
+    watch_folder = config["watch_folder"]
+    rules = config["rules"]
+    unknown_folder = config["unknown_folder"]
+
+    handler = FileHandler(watch_folder, rules, unknown_folder, dry_run)
+    observer = Observer()
+    observer.schedule(handler, watch_folder, recursive=False)
+
+    print(f"Watching the folder {watch_folder}")
+    print("Press Ctrl + c to stop\n")
+
+    observer.start()
+
+    try:
+        while True:
+            time.sleep(5)
+    except KeyboardInterrupt:
+        observer.stop()
+        print("\nStopped Watching !!")
+
+    observer.join()
 
 if __name__ == "__main__":
-    # config = load_config()
-    # rules = config["rules"]
-    # unknown = config["unknown_folder"]
-    # print(get_destination("resume.pdf", rules, unknown))
-    # print(get_destination("photo.JPG", rules, unknown))
-    # print(get_destination("something.xyz", rules, unknown))
-    # print(get_destination("movie.mp4", rules, unknown))
-
-    test_path = Path('test-resume.pdf')
-    test_path.touch()   # it creates an empty file with that name
-    result = handle_duplicate(test_path)
-    print(result)
-
-    test_path.unlink()
+    import sys
+    dry_run = "--dry-run" in sys.argv
+    start_watching(dry_run=dry_run)
