@@ -1,0 +1,19 @@
+{
+  "watch_folder": "C:/Users/DELL/Downloads",
+  "rules": {
+    ".pdf":  "Documents/PDFs",
+    ".docx": "Documents/Word",
+    ".jpg":  "Images",
+    ".jpeg": "Images",
+    ".png":  "Images",
+    ".mp4":  "Videos",
+    ".mp3":  "Music",
+    ".zip":  "Archives",
+    ".rar":  "Archives",
+    ".csv":  "Data",
+    ".xlsx": "Data",
+    ".py":   "Code",
+    ".exe":  "Installers"
+  },
+  "unknown_folder": "Unsorted"
+}
