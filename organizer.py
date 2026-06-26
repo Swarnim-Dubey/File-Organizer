@@ -13,9 +13,12 @@ logger = setup_logger()
 # notifier = send_notification()
 
 def load_config():
-    config_path = Path(__file__).parent / 'config.json'
+    config_path = Path(__file__).parent / "config.json"
     with open(config_path, 'r') as f:
         config = json.load(f)
+
+    if not config["watch_folder"]:
+        config["watch_folder"] = str(Path.home() / "Downloads")
     return config
 
 def get_destination(filename, rules, unknown_folder):

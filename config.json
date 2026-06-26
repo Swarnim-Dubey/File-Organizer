@@ -1,5 +1,5 @@
 {
-  "watch_folder": "C:/Users/DELL/Downloads",
+  "watch_folder": "",
   "rules": {
     ".pdf":  "Documents/PDFs",
     ".docx": "Documents/Word",
