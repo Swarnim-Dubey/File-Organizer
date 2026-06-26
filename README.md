@@ -67,7 +67,7 @@ pip install -r requirements.txt
 ## ▶️ Running the Project
 
 ```bash
-uv run main.py
+uv run organizer.py
 ```
 
 The application will start monitoring the configured folder and automatically organize files.
