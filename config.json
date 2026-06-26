@@ -13,7 +13,11 @@
     ".csv":  "Data",
     ".xlsx": "Data",
     ".py":   "Code",
-    ".exe":  "Installers"
+    ".exe":  "Installers",
+    ".pptx": "Documents/PowerPoint",
+    ".txt":  "Documents/Text",
+    ".doc":  "Documents/Word",
+    ".ppt":  "Documents/PowerPoint"
   },
   "unknown_folder": "Unsorted"
 }

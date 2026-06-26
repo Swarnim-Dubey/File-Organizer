@@ -53,7 +53,7 @@ def move_file(source_path, watch_folder, rules, unknown_folder, dry_run=False, l
         # file_size = format_file_size(destination_path.stat().st_size())
         # logger.info(f"Moved {source_path} to {destination_path} ({file_size})")
         # send_notification(source_path.name, str(destination_path.parent))
-        logger.info(f"[DRY RUN] Would move: {source_path.name}  →  {destination_path}")
+        logger.info(f"[DRY RUN] Would move: {source_path.name}  to  {destination_path}")
         return
     
     # this creates the destination folder if doesnt exist
@@ -62,7 +62,7 @@ def move_file(source_path, watch_folder, rules, unknown_folder, dry_run=False, l
     shutil.move(str(source_path), str(destination_path))
     # print(f"Moved {source_path.name} to {destination_path}")
     file_size = format_file_size(destination_path.stat().st_size)
-    logger.info(f"Moved: {source_path.name}  →  {destination_path}  ({file_size})")
+    logger.info(f"Moved: {source_path.name}  to  {destination_path}  ({file_size})")
     send_notification(source_path.name, str(destination_path.parent))
 
 
@@ -101,6 +101,32 @@ class FileHandler(FileSystemEventHandler):
             self.logger
         )
     
+    def on_moved(self, event):
+        if event.is_directory:
+            return
+        
+        source_path = Path(event.dest_path)
+
+        ignored_extensions = {".temp", ".crdownload", ".part", ".download"}
+        ignored_prefixes = ("-", ".")
+
+        # checks
+        if source_path.suffix.lower() in ignored_extensions:
+            return
+        if source_path.name.startswith(ignored_prefixes):
+            return
+        if not source_path.exists():
+            return
+        
+        move_file(
+            source_path,
+            self.watch_folder,
+            self.rules,
+            self.unknown_folder,
+            self.dry_run,
+            self.logger
+        )
+
     def _wait_for_file(self, path):
         previous_size = -1
         while True:
