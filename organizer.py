@@ -10,7 +10,6 @@ from notifier import send_notification
 from utils import format_file_size
 
 logger = setup_logger()
-# notifier = send_notification()
 
 def load_config():
     config_path = Path(__file__).parent / "config.json"
@@ -51,16 +50,20 @@ def move_file(source_path, watch_folder, rules, unknown_folder, dry_run=False, l
     destination_path = handle_duplicate(destination_path)   # handling duplication
 
     if dry_run:
-        file_size = format_file_size(destination_path.stat().st_size())
-        logger.info(f"Moved {source_path} to {destination_path} ({file_size})")
-        send_notification(source_path.name, str(destination_path.parent))
+        # file_size = format_file_size(destination_path.stat().st_size())
+        # logger.info(f"Moved {source_path} to {destination_path} ({file_size})")
+        # send_notification(source_path.name, str(destination_path.parent))
+        logger.info(f"[DRY RUN] Would move: {source_path.name}  →  {destination_path}")
         return
     
     # this creates the destination folder if doesnt exist
     destination_dir.mkdir(parents = True, exist_ok = True)
 
     shutil.move(str(source_path), str(destination_path))
-    print(f"Moved {source_path.name} to {destination_path}")
+    # print(f"Moved {source_path.name} to {destination_path}")
+    file_size = format_file_size(destination_path.stat().st_size)
+    logger.info(f"Moved: {source_path.name}  →  {destination_path}  ({file_size})")
+    send_notification(source_path.name, str(destination_path.parent))
 
 
 class FileHandler(FileSystemEventHandler):
