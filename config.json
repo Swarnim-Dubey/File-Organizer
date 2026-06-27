@@ -1,5 +1,6 @@
 {
   "watch_folder": "",
+  "first_run" : true,
   "rules": {
     ".pdf":  "Documents/PDFs",
     ".docx": "Documents/Word",
