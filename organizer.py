@@ -1,5 +1,4 @@
 from pathlib import Path
-import os
 import json
 import shutil
 from watchdog.observers import Observer
@@ -8,6 +7,7 @@ import time
 from logger import setup_logger
 from notifier import send_notification
 from utils import format_file_size
+import threading
 
 logger = setup_logger()
 
@@ -18,6 +18,10 @@ def load_config():
 
     if not config["watch_folder"]:
         config["watch_folder"] = str(Path.home() / "Downloads")
+    
+    if "first_run" not in config:
+        config["first_run"] = True
+
     return config
 
 def get_destination(filename, rules, unknown_folder):
@@ -107,8 +111,8 @@ class FileHandler(FileSystemEventHandler):
         
         source_path = Path(event.dest_path)
 
-        ignored_extensions = {".temp", ".crdownload", ".part", ".download"}
-        ignored_prefixes = ("-", ".")
+        ignored_extensions = {".tmp", ".crdownload", ".part", ".download"}
+        ignored_prefixes = ("~", ".")
 
         # checks
         if source_path.suffix.lower() in ignored_extensions:
@@ -145,6 +149,21 @@ def start_watching(dry_run=False):
     rules = config["rules"]
     unknown_folder = config["unknown_folder"]
 
+    if config.get("first_run", True):
+        try:
+            from autostart import enable_autostart
+            enable_autostart()
+            logger.info("First Launch - Autostart Enabled")
+        except Exception as e:
+            logger.warning(f"Could not enable autostart: {e}")
+        finally:
+            config["first_run"] = False
+            config_path = Path(__file__).parent / "config.json"
+            with open (config_path, "w") as f:
+                json.dump(config, f, indent=2)
+
+    stop_event = threading.Event()
+
     handler = FileHandler(watch_folder, rules, unknown_folder, dry_run, logger)
     observer = Observer()
     observer.schedule(handler, watch_folder, recursive=False)
@@ -154,14 +173,23 @@ def start_watching(dry_run=False):
 
     observer.start()
 
-    try:
-        while True:
-            time.sleep(5)
-    except KeyboardInterrupt:
-        observer.stop()
-        print("\nStopped Watching !!")
+    from tray import run_tray
+    tray_thread = threading.Thread(
+        target=run_tray,
+        args=(stop_event, watch_folder),
+        daemon=True
+    )
+    tray_thread.start()
 
-    observer.join()
+    try:
+        while not stop_event.is_set():
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        observer.stop()
+        observer.join()
+        logger.info("File Organizer Stopped")
 
 if __name__ == "__main__":
     import sys
