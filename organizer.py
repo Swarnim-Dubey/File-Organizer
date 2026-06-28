@@ -193,5 +193,12 @@ def start_watching(dry_run=False):
 
 if __name__ == "__main__":
     import sys
-    dry_run = "--dry-run" in sys.argv
-    start_watching(dry_run=dry_run)
+    # dry_run = "--dry-run" in sys.argv
+    # start_watching(dry_run=dry_run)
+    if "--update" in sys.argv:
+        from autostart import enable_autostart
+        enable_autostart()
+        print("Autostart path updated.")
+    else:
+        dry_run = "--dry-run" in sys.argv
+        start_watching(dry_run=dry_run)
