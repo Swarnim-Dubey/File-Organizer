@@ -1,8 +1,15 @@
 import logging
 from pathlib import Path
+import sys
+
+def get_base_path():
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).parent
+    else:
+        return Path(__file__).parent
 
 def setup_logger():
-    logs_dir = Path(__file__).parent / "logs"
+    logs_dir = get_base_path() / "logs"
     logs_dir.mkdir(exist_ok=True)
 
     log_file = logs_dir / "activity.log"
