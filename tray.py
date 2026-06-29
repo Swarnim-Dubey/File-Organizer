@@ -3,6 +3,13 @@ from pystray import MenuItem as item
 from PIL import Image, ImageDraw
 import os
 from pathlib import Path
+import sys
+
+def get_base_path():
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).parent
+    else:
+        return Path(__file__).parent
 
 def create_icon_image():
     image = Image.new("RGB", (64, 64), color=(37, 99, 235))
@@ -11,7 +18,7 @@ def create_icon_image():
     return image
 
 def open_log_file():
-    log_path = Path(__file__).parent / "logs" / "activity.log"
+    log_path = get_base_path() / "logs" / "activity.log"
     if log_path.exists():
         os.startfile(str(log_path))
 
