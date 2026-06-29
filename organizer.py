@@ -9,10 +9,16 @@ from notifier import send_notification
 from utils import format_file_size
 import threading
 
+def get_base_path():
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).parent
+    else:
+        return Path(__file__).parent
+
 logger = setup_logger()
 
 def load_config():
-    config_path = Path(__file__).parent / "config.json"
+    config_path = get_base_path() / "config.json"
     with open(config_path, 'r') as f:
         config = json.load(f)
 
@@ -158,7 +164,7 @@ def start_watching(dry_run=False):
             logger.warning(f"Could not enable autostart: {e}")
         finally:
             config["first_run"] = False
-            config_path = Path(__file__).parent / "config.json"
+            config_path = get_base_path() / "config.json"
             with open (config_path, "w") as f:
                 json.dump(config, f, indent=2)
 
